@@ -9,7 +9,6 @@ const Web3Voting = () => {
   const [candidates, setCandidates] = useState([]);
   const [candidatesCount, setCandidatesCount] = useState(0);
 
-  // 获取provider实例（MetaMask注入）
   const getProvider = () => {
     if (typeof window !== 'undefined' && window.ethereum) {
       return new ethers.BrowserProvider(window.ethereum);
@@ -17,12 +16,10 @@ const Web3Voting = () => {
     return null;
   };
 
-  // 获取合约实例
   const getContract = (signerOrProvider) => {
     return new ethers.Contract(CONTRACT_ADDRESS, ABI, signerOrProvider);
   };
 
-  // 连接MetaMask钱包
   const connectWallet = async () => {
     if (!window.ethereum) {
       alert('请先安装 MetaMask');
@@ -38,12 +35,10 @@ const Web3Voting = () => {
     }
   };
 
-  // 断开钱包绑定
   const disconnectWallet = () => {
     setAccount('');
   };
 
-  // 获取候选人数
   const fetchCandidatesCount = async () => {
     try {
       const provider = getProvider();
@@ -57,7 +52,6 @@ const Web3Voting = () => {
     }
   };
 
-  // 获取候选人列表
   const fetchCandidates = async () => {
     try {
       const provider = getProvider();
@@ -78,7 +72,6 @@ const Web3Voting = () => {
     }
   };
 
-  // 投票功能
   const vote = async (candidateId) => {
     try {
       const provider = getProvider();
@@ -93,22 +86,17 @@ const Web3Voting = () => {
       await tx.wait();
 
       alert('投票成功！');
-      fetchCandidates(); // 更新候选人票数
+      fetchCandidates();
     } catch (error) {
-    //   console.error('投票失败:', error);
-      // 优先使用合约返回的reason字段
-        const revertReason = error?.reason || error?.error?.message || '未知错误';
-        // 根据常见错误做用户友好的提示
-        let message = '投票失败：' + revertReason;
-        if (revertReason.includes('already voted')) {
-            message = '您已经投过票了，不能重复投票。';
-        }
-
-        alert(message);
+      const revertReason = error?.reason || error?.error?.message || '未知错误';
+      let message = '投票失败：' + revertReason;
+      if (revertReason.includes('already voted')) {
+        message = '您已经投过票了，不能重复投票。';
+      }
+      alert(message);
     }
   };
 
-  // 监听账户变更，自动更新绑定钱包地址
   useEffect(() => {
     if (window.ethereum) {
       const handleAccountsChanged = (accounts) => {
@@ -125,7 +113,6 @@ const Web3Voting = () => {
 
       window.ethereum.on('accountsChanged', handleAccountsChanged);
 
-      // 清理监听器
       return () => {
         if (window.ethereum.removeListener) {
           window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
@@ -134,31 +121,56 @@ const Web3Voting = () => {
     }
   }, []);
 
-  // 页面加载时拉取候选人信息
   useEffect(() => {
     fetchCandidates();
   }, []);
 
   return (
-    <div>
-      <h2>Web3 投票系统</h2>
-      {!account ? (
-        <button onClick={connectWallet}>连接 MetaMask 钱包</button>
-      ) : (
-        <>
-          <p>当前钱包地址：{account}</p>
-          <button onClick={disconnectWallet}>断开钱包</button>
-        </>
-      )}
+    <div className="min-h-screen bg-gray-100 p-6">
+      <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-6">
+        <h2 className="text-2xl font-bold text-center mb-4 text-blue-700">Web3 投票系统</h2>
 
-      <ul>
-        {candidates.map((c) => (
-          <li key={c.id}>
-            {c.name} - 得票数: {c.voteCount}{' '}
-            <button onClick={() => vote(c.id)}>投票</button>
-          </li>
-        ))}
-      </ul>
+        <div className="flex justify-center mb-4">
+          {!account ? (
+            <button
+              onClick={connectWallet}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+            >
+              连接 MetaMask 钱包
+            </button>
+          ) : (
+            <div className="text-center">
+              <p className="text-gray-600 mb-2">当前钱包地址：<span className="font-mono text-sm">{account}</span></p>
+              <button
+                onClick={disconnectWallet}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+              >
+                断开钱包
+              </button>
+            </div>
+          )}
+        </div>
+
+        <ul className="space-y-4">
+          {candidates.map((c) => (
+            <li
+              key={c.id}
+              className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-md"
+            >
+              <div>
+                <p className="font-semibold text-lg">{c.name}</p>
+                <p className="text-gray-600">得票数: {c.voteCount}</p>
+              </div>
+              <button
+                onClick={() => vote(c.id)}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
+              >
+                投票
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };
