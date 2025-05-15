@@ -22,6 +22,15 @@ This project is a decentralized voting application built using React and Web3.
 ```bash
 git clone https://github.com/jigangmissyou/web3-voting.git
 cd web3-voting
+```
+### 2. Run docker
+
+```bash
 docker compose up -d
+```
+### 3. Run front-end
+
+```bash
 npm install
 npm start
+```
